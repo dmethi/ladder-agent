@@ -1,0 +1,32 @@
+table inet ladder_agent {
+  set host_v4 { type ipv4_addr; flags interval; }
+  set host_v6 { type ipv6_addr; flags interval; }
+  set forbidden_v4 {
+    type ipv4_addr
+    flags interval
+    elements = { 0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8,
+      169.254.0.0/16, 172.16.0.0/12, 192.0.0.0/24, 192.0.2.0/24,
+      192.88.99.0/24, 192.168.0.0/16, 198.18.0.0/15,
+      198.51.100.0/24, 203.0.113.0/24, 224.0.0.0/4, 240.0.0.0/4 }
+  }
+  set forbidden_v6 {
+    type ipv6_addr
+    flags interval
+    elements = { 2001::/23, 2001:db8::/32, 2002::/16, 3fff::/20 }
+  }
+  chain output {
+    type filter hook output priority 0; policy accept;
+    meta skuid 62000 jump public_web_only
+  }
+  chain public_web_only {
+    ip daddr @host_v4 counter reject
+    ip6 daddr @host_v6 counter reject
+    ip daddr @forbidden_v4 counter reject
+    ip6 daddr != 2000::/3 counter reject
+    ip6 daddr @forbidden_v6 counter reject
+    ip daddr 1.1.1.1 udp dport 53 counter accept
+    ip daddr 1.1.1.1 tcp dport 53 counter accept
+    tcp dport { 80, 443 } counter accept
+    counter reject
+  }
+}
