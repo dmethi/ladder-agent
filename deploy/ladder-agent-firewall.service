@@ -1,0 +1,12 @@
+[Unit]
+Description=Independent network boundary for Ladder Agent
+After=nftables.service
+Before=ladder-agent.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nft -f /etc/ladder-agent/firewall.nft
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

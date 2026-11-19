@@ -1,0 +1,41 @@
+minimumLimaVersion: 2.3.0
+vmType: vz
+arch: aarch64
+cpus: 2
+memory: 1GiB
+disk: 8GiB
+plain: true
+images:
+  - location: https://cloud-images.ubuntu.com/releases/resolute/release-20261016/ubuntu-26.04-server-cloudimg-arm64.img
+    arch: aarch64
+    digest: sha256:8eb876c2ccc4b6ff89e4a65d511815923b285e04503ba465809bf587f763da24
+param:
+  internal_netplanOptional: "true"
+user:
+  name: ladder-admin
+  uid: 1000
+  home: /home/ladder-admin
+mounts: []
+ssh:
+  forwardAgent: false
+containerd:
+  system: false
+  user: false
+networkOpts:
+  hostLoopback: false
+hostResolver:
+  enabled: false
+dns:
+  - 1.1.1.1
+propagateProxyEnv: false
+provision:
+  - mode: system
+    script: |
+      #!/bin/sh
+      set -eu
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update -qq
+      apt-get install -y -qq nftables ca-certificates curl python3
+      getent group ladderclients >/dev/null || groupadd --gid 62001 ladderclients
+      id ladderworker >/dev/null 2>&1 || useradd --system --uid 62000 --no-create-home --shell /usr/sbin/nologin --gid ladderclients ladderworker
+      usermod -aG ladderclients ladder-admin
